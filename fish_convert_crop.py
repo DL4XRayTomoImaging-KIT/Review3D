@@ -15,8 +15,8 @@ class getViews:
             elif view == "slices":
                 view = self.get_slices_review(aimg)
             views.append(view)
-        return  views
-    
+        return views
+
     def get_planes_review(self, aimg):
         fig = plt.figure(figsize=(16, 10))
         gs = fig.add_gridspec(2, 3)

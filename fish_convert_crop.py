@@ -1,7 +1,7 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
-class get_views:
+class getViews:
     def __init__(self, view_types):
         self.view_types = view_types
 
@@ -15,7 +15,7 @@ class get_views:
             elif view == "slices":
                 view = self.get_slices_review(aimg)
             views.append(view)
-        return
+        return  views
     
     def get_planes_review(self, aimg):
         fig = plt.figure(figsize=(16, 10))

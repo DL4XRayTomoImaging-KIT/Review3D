@@ -1,22 +1,27 @@
 import numpy as np
 from matplotlib import pyplot as plt
+import argparse
+from flexpand import Expander
+from tqdm.auto import tqdm
+from skimage import io
+import os
 
 class getViews:
     def __init__(self, view_types):
         self.view_types = view_types
 
     def __call__(self, aimg):
-        views = []
+        figs = []
         for view in self.view_types:
             if view == "planes":
-                view = self.get_planes_review(aimg)
+                fig = self.get_planes_review(aimg)
             elif view == "bbox":
-                view = self.get_bbox_review(aimg)
+                fig = self.get_bbox_review(aimg)
             elif view == "slices":
-                view = self.get_slices_review(aimg)
-            views.append(view)
-        return views
-
+                fig = self.get_slices_review(aimg)
+            figs.append(fig)
+        return figs
+    
     def get_planes_review(self, aimg):
         fig = plt.figure(figsize=(16, 10))
         gs = fig.add_gridspec(2, 3)
@@ -101,3 +106,33 @@ class getViews:
         plt.tight_layout()
         return fig
 
+
+def save_plots(input_files, output_folder, views):
+    x = getViews(view_types=views)
+    for file in tqdm(input_files):
+        aimg = io.imread(file)
+        figs = x(aimg)
+        for fig, view in zip(figs, views):
+            if output_folder is None:
+                fig_name = os.path.join(os.path.split(file)[0], view + '_' + os.path.split(file)[1])
+            elif os.path.exists(output_folder) and os.path.isdir(output_folder):
+                fig_name = os.path.join(output_folder, os.path.basename(file))
+            fig.savefig(fig_name)
+
+
+def main():   
+    parser = argparse.ArgumentParser(description = 'get views for 3d TIFF volumes')
+    parser.add_argument('--view-types', nargs='+')
+    parser.add_argument('--input-files')
+    parser.add_argument('--output-files', default=None, help='Files to output the result of processing. If folder is provided will be saved with the same name as input files. If nothing provided will be saved with prefix alongside with input files.')
+    args = parser.parse_args()
+    
+    # get input file space
+    fle = Expander(verbosity=True)
+    fname = args.input_files
+    input_files = fle(fname)
+    save_plots(input_files, args.output_files, args.view_types)
+
+
+if __name__ == "__main__":
+    main()

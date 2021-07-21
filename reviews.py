@@ -1,26 +1,21 @@
 import numpy as np
 from matplotlib import pyplot as plt
 import argparse
-from flexpand import Expander
+from flexpand import Expander, add_args
 from tqdm.auto import tqdm
 from skimage import io
 import os
 
-class getViews:
-    def __init__(self, view_types):
-        self.view_types = view_types
+class getView:
 
-    def __call__(self, aimg):
-        figs = []
-        for view in self.view_types:
-            if view == "planes":
-                fig = self.get_planes_review(aimg)
-            elif view == "bbox":
-                fig = self.get_bbox_review(aimg)
-            elif view == "slices":
-                fig = self.get_slices_review(aimg)
-            figs.append(fig)
-        return figs
+    def __call__(self, aimg, view_type):
+        if view_type == "planes":
+            fig = self.get_planes_review(aimg)
+        elif view_type == "bbox":
+            fig = self.get_bbox_review(aimg)
+        elif view_type == "slices":
+            fig = self.get_slices_review(aimg)
+        return fig
     
     def get_planes_review(self, aimg):
         fig = plt.figure(figsize=(16, 10))
@@ -107,31 +102,35 @@ class getViews:
         return fig
 
 
-def save_plots(input_files, output_folder, views):
-    x = getViews(view_types=views)
-    for file in tqdm(input_files):
-        aimg = io.imread(file)
-        figs = x(aimg)
-        for fig, view in zip(figs, views):
+def save_plots(input_files, output_folder, views, force):
+    x = getView()
+    for file in tqdm(input_files):        
+        for view in views:
+            fname = view + '_' + os.path.split(file)[1]
             if output_folder is None:
-                fig_name = os.path.join(os.path.split(file)[0], view + '_' + os.path.split(file)[1])
+                fig_name = os.path.join(os.path.split(file)[0], fname)
             elif os.path.exists(output_folder) and os.path.isdir(output_folder):
-                fig_name = os.path.join(output_folder, os.path.basename(file))
-            fig.savefig(fig_name)
+                fig_name = os.path.join(output_folder, fname)
+            if force or not os.path.exists(fig_name):
+                aimg = io.imread(file)
+                fig = x(aimg, view)
+                fig.savefig(fig_name)
 
 
-def main():   
+def main():
     parser = argparse.ArgumentParser(description = 'get views for 3d TIFF volumes')
-    parser.add_argument('--view-types', nargs='+')
-    parser.add_argument('--input-files')
+    input_group = parser.add_argument_group('Input files to be processed with this util')
+    add_args(input_group)
+
+    parser.add_argument('--view-types', nargs='+', choices=["planes","bbox","slices"], help='one or more views to be saved')
     parser.add_argument('--output-files', default=None, help='Files to output the result of processing. If folder is provided will be saved with the same name as input files. If nothing provided will be saved with prefix alongside with input files.')
+    parser.add_argument('--force', default=False, const=True, action='store_const', help='If file with the same name found it will be overwrited. By default this file will not be processed.')
     args = parser.parse_args()
     
     # get input file space
     fle = Expander(verbosity=True)
-    fname = args.input_files
-    input_files = fle(fname)
-    save_plots(input_files, args.output_files, args.view_types)
+    input_files = fle(args=args)
+    save_plots(input_files, args.output_files, args.view_types, args.force)
 
 
 if __name__ == "__main__":

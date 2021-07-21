@@ -1,8 +1,8 @@
 from skimage import io
-from fish_convert_crop import *
+from reviews import *
 
 
 im = io.imread("513.tif")
-x = getViews(view_types=["planes","slices"])
+x = getView(view_type="planes")
 x(im)
 plt.show()

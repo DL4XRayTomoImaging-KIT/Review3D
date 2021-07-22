@@ -102,7 +102,7 @@ class getView:
         return fig
 
 
-def save_plots(input_files, output_folder, views, force):
+def save_plots(input_files, output_folder, views, omit):
     x = getView()
     for file in tqdm(input_files):
         first_read = True   # flag to check if img if being read first time
@@ -112,7 +112,7 @@ def save_plots(input_files, output_folder, views, force):
                 fig_name = os.path.join(os.path.split(file)[0], fname)
             elif os.path.exists(output_folder) and os.path.isdir(output_folder):
                 fig_name = os.path.join(output_folder, fname)
-            if force or not os.path.exists(fig_name):
+            if not omit or not os.path.exists(fig_name):
                 if first_read:
                     aimg = io.imread(file)
                     first_read = False
@@ -128,13 +128,13 @@ def main():
 
     parser.add_argument('--view-types', nargs='+', choices=["planes","bbox","slices"], help='one or more views to be saved')
     parser.add_argument('--output-files', default=None, help='Files to output the result of processing. If folder is provided will be saved with the same name as input files. If nothing provided will be saved with prefix alongside with input files.')
-    parser.add_argument('--force', default=False, const=True, action='store_const', help='If file with the same name found it will be overwrited. By default this file will not be processed.')
+    parser.add_argument('--omit', default=False, const=True, action='store_const', help='If file with the same name found it will be overwrited. By default this file will not be processed.')
     args = parser.parse_args()
     
     # get input file space
     fle = Expander(verbosity=True)
     input_files = fle(args=args)
-    save_plots(input_files, args.output_files, args.view_types, args.force)
+    save_plots(input_files, args.output_files, args.view_types, args.omit)
 
 
 if __name__ == "__main__":

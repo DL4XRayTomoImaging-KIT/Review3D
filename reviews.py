@@ -104,7 +104,8 @@ class getView:
 
 def save_plots(input_files, output_folder, views, force):
     x = getView()
-    for file in tqdm(input_files):        
+    for file in tqdm(input_files):
+        first_read = True   # flag to check if img if being read first time
         for view in views:
             fname = view + '_' + os.path.split(file)[1]
             if output_folder is None:
@@ -112,9 +113,12 @@ def save_plots(input_files, output_folder, views, force):
             elif os.path.exists(output_folder) and os.path.isdir(output_folder):
                 fig_name = os.path.join(output_folder, fname)
             if force or not os.path.exists(fig_name):
-                aimg = io.imread(file)
+                if first_read:
+                    aimg = io.imread(file)
+                    first_read = False
                 fig = x(aimg, view)
                 fig.savefig(fig_name)
+                fig.clf()
 
 
 def main():
